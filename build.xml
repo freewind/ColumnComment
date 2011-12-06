@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<project name="Add comments" default="" basedir=".">
+
+	<property name="root.dir" value="." />
+	<property name="hbmDir" value="${root.dir}/generated" />
+
+	<path id="toolslib">
+		<fileset dir="${root.dir}/WebRoot/WEB-INF/lib">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="test_reflib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="toolslib" />
+	<taskdef name="comment2hbm" classname="commenttools.CommentToHbmTask" classpathref="toolslib">
+		<classpath>
+			<path location="${root.dir}/WebRoot/WEB-INF/classes" />
+		</classpath>
+	</taskdef>
+
+	<target name="GenTables">
+		<!-- 由Hibernate Entity(含annotation)生成相应的*.hbm.xml -->
+		<hibernatetool destdir="${hbmDir}">
+			<classpath>
+				<!-- 含有Annotation的Hibernate Entity类编译后的.class文件要在该目录下 -->
+				<path location="${root.dir}/WebRoot/WEB-INF/classes" />
+			</classpath>
+			<annotationconfiguration configurationfile="${root.dir}/tools/annotation2hbm.cfg.xml" />
+			<hbm2hbmxml />
+		</hibernatetool>
+
+		<!-- 读取@ColumnComment注解，添加到前面生成的*.hbm.xml中 -->
+		<comment2hbm hbmDir="${hbmDir}" entityPkg="com.newcapec.wzq.pojo" />
+
+		<hibernatetool destdir="${hbmDir}">
+			<classpath>
+				<!-- 含有Annotation的Hibernate Entity类编译后的.class文件要在该目录下 -->
+				<path location="${root.dir}/WebRoot/WEB-INF/classes" />
+				<path location="${hbmDir}" />
+			</classpath>
+			<configuration configurationfile="${root.dir}/tools/hbm2db.cfg.xml" />
+			<hbm2ddl export="true" outputfilename="sql.ddl" />
+		</hibernatetool>
+
+	</target>
+
+</project>
